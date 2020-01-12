@@ -173,9 +173,9 @@ class PhangsGalaxy(object):
         Ygal = Yplane / np.cos(self.inclination)
         Rgal = np.sqrt(Xgal**2 + Ygal**2)
         if returnXY:
-            return (Xgal, Ygal)
+            return (Xgal.to(u.pc), Ygal.to(u.pc))
         else:
-            return Rgal
+            return Rgal.to(u.pc)
 
     def position_angles(self, skycoord=None, ra=None, dec=None,
                         header=None):
