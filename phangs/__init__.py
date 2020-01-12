@@ -26,7 +26,9 @@ if LooseVersion(sys.version) < LooseVersion(__minimum_python_version__):
 if not _ASTROPY_SETUP_:   # noqa
     # For egg_info test builds to pass, put package imports here.
     from .archive import *
+    from .phangs_galaxies import *
     # Then you can be explicit to control what ends up in the namespace,
     # __all__ += ['do_primes']   # noqa
     # or you can keep everything from the subpackage with the following instead
     __all__ += archive.__all__
+    __all__ += phangs_galaxies.__all__
