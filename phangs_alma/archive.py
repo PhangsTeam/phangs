@@ -15,5 +15,5 @@ def retrieve(galaxy=['all'],
              product=['mom0'],
              exclude=[None],
              method='ssh'):
-
+    
     pass
