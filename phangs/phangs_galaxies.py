@@ -63,9 +63,9 @@ def _parse_galtable(galobj, name):
         galobj.m_star = 1e1 ** (thisobj['MSTAR_LOGMSTAR']) * u.M_sun
         galobj.m_hi = 1e1 ** (thisobj['HI_LOGMHI']) * u.M_sun
         galobj.m_h2 = 1e1 ** (thisobj['CO_LOGMH2']) * u.M_sun
+        galobj.sfr = 1e1 ** (thisobj['SFR_LOGSFR']) * u.Msun / u.yr
         galobj.r25 = thisobj['SIZE_OPT_R25'] * u.arcsec
-        
-        
+        galobj.table = thisobj
         return True
 
 class PhangsGalaxy(object):
