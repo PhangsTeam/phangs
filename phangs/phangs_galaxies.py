@@ -23,7 +23,7 @@ def _parse_galtable(galobj, name):
         table_name = get_pkg_data_filename('data/phangs_sample_table_v1p4.fits',
                                         package='phangs')
     galtable = Table.read(table_name)
-    hits = [x for x in galtable if name in x['ALIAS']]
+    hits = [x for x in galtable if name.upper() in x['ALIAS']]
     if len(hits) > 0:
         if len(hits) > 1:
             exact = np.zeros(len(hits), dtype=np.bool)
@@ -114,6 +114,7 @@ class PhangsGalaxy(object):
                     setattr(self, par, params[par])
         else:
             if not _parse_galtable(self, name):
+                warnings.r
                 try:
                     from astroquery.ned import Ned
                     t = Ned.query_object(name)
@@ -208,10 +209,10 @@ class PhangsGalaxy(object):
             warnings.warn('No rotation curve data found for ' + self.name)
             return(None)
         
-        rsample = t[idx]['Radius']
-        vsample = t[idx]['Vrot']
-        vrot_lower = t[idx]['Vrot_lower']
-        vrot_upper = t[idx]['Vrot_upper']
+        rsample = rctable[idx]['Radius']
+        vsample = rctable[idx]['Vrot']
+        vrot_lower = rctable[idx]['Vrot_lower']
+        vrot_upper = rctable[idx]['Vrot_upper']
 
         if radius.unit.is_equivalent(u.m):
             r = radius.to(rsample.unit).value
@@ -219,10 +220,12 @@ class PhangsGalaxy(object):
             r = (radius.to(u.rad) * self.distance.to(rsample.unit)).value
         else:
             warnings.warn("Radius units must be equivalent to angle or distance")
-        vinterp = np.interp(r, rsample.value, vsample.value)
+        vinterp = np.interp(r, rsample.data, vsample.data, left=np.nan, right=np.nan)
         if return_bounds:
-            vr_lower = np.interp(r, rsample.value, vrot_lower.value)
-            vr_upper = np.interp(r, rsample.value, vrot_upper.value)
+            vr_lower = np.interp(r, rsample.data, vrot_lower.data,
+                                 left=np.nan, right=np.nan)
+            vr_upper = np.interp(r, rsample.data, vrot_upper.data,
+                                 left=np.nan, right=np.nan)
             return(vinterp * vsample.unit,
                    vr_lower * vsample.unit,
                    vr_upper * vsample.unit)
