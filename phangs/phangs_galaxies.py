@@ -1,6 +1,6 @@
 from astropy.coordinates import SkyCoord, Angle, FK5
-from astroquery.ned import Ned
 import astropy.units as u
+from astropy.units import Quantity
 from astropy.table import Table
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -115,6 +115,7 @@ class PhangsGalaxy(object):
         else:
             if not _parse_galtable(self, name):
                 try:
+                    from astroquery.ned import Ned
                     t = Ned.query_object(name)
                     if len(t) == 1:
                         self.canonical_name = t['Object Name'][0]
@@ -194,7 +195,37 @@ class PhangsGalaxy(object):
 
         return self.center_position.to_pixel(wcs)
 
-    def rotation_curve(self):
-        # Gonna be great!
-        raise NotImplementedError
-        pass
+    def rotation_curve(self, radius, return_bounds=False):
+        if type(radius) is not Quantity:
+            warnings.warn('Radius must be specified with astropy.unit')
+            return(None)
+        table_name = get_pkg_data_filename('data/RCtable_Nov2019.fits',
+                                           package='phangs')
+        rctable = Table.read(table_name)
+        idx = (rctable['Galaxy'] == self.name.lower())
+
+        if ~np.any(idx):
+            warnings.warn('No rotation curve data found for ' + self.name)
+            return(None)
+        
+        rsample = t[idx]['Radius']
+        vsample = t[idx]['Vrot']
+        vrot_lower = t[idx]['Vrot_lower']
+        vrot_upper = t[idx]['Vrot_upper']
+
+        if radius.unit.is_equivalent(u.m):
+            r = radius.to(rsample.unit).value
+        elif radius.unit.is_equivalent(u.rad):
+            r = (radius.to(u.rad) * self.distance.to(rsample.unit)).value
+        else:
+            warnings.warn("Radius units must be equivalent to angle or distance")
+        vinterp = np.interp(r, rsample.value, vsample.value)
+        if return_bounds:
+            vr_lower = np.interp(r, rsample.value, vrot_lower.value)
+            vr_upper = np.interp(r, rsample.value, vrot_upper.value)
+            return(vinterp * vsample.unit,
+                   vr_lower * vsample.unit,
+                   vr_upper * vsample.unit)
+        else:
+            return(vinterp * vsample.unit)
+
