@@ -382,8 +382,10 @@ def predict_alphaCO10(
 
 
 def alphaCO_from_coords(galaxy, skycoord=None, ra=None, dec=None,
-                        header=None, prescription='Accurso+17',
-                        line_ratio=0.65, gradient='Sanchez+14',
+                        header=None, logOH=None, prescription='Accurso+17',
+                        line_ratio=0.65, A17_logOH_PP04=None, 
+                        A17_redshift=None, A17_SFR=None, A17_Mstar=None,
+                        gradient='Sanchez+14',
                          **kwargs):
 
     """
@@ -410,18 +412,32 @@ def alphaCO_from_coords(galaxy, skycoord=None, ra=None, dec=None,
     """
     
     radius = galaxy.radius(skycoord=skycoord, ra=ra, dec=dec, header=header)
-    # TODO: Update with proper Reff and SFR values in the new table
-    Reff = (galaxy.r25 / u.rad * galaxy.distance / 4).to(u.kpc)
+    # TODO: CHANGE TO galaxy.sfr once populated in table
     sfr = 1e1 ** (-1.12) * galaxy.m_star / (1e9 * u.M_sun) * u.M_sun / u.yr
-    logOH = predict_metallicity(galaxy.m_star, Rgal=radius, Re=Reff,
-                                gradient=gradient, **kwargs)
+
+    if A17_SFR is None:
+        A17_SFR = sfr
+
+    if logOH is None:
+        # TODO: Update with proper Reff and SFR values in the new table
+        Reff = (galaxy.r25 / u.rad * galaxy.distance / 4).to(u.kpc)
+        logOH = predict_metallicity(galaxy.m_star, Rgal=radius, Re=Reff,
+                                    gradient=gradient, **kwargs)
+    if A17_logOH_PP04 is None:
+        A17_logOH_PP04 = log/OH
+    if PHANGS_Zprime is None:
+        PHANGS_Zprime = 1e1**(logOH - 8.68)
+    if A17_Mstar is None:
+        A17_Mstar = galaxy.m_star
+    if A17_redshift is None:
+        A17_redshift = 0
     # TODO: find assumed value of Z_sun to make Zprime
     alphaCO = predict_alphaCO10(prescription=prescription, 
-                                A17_logOH_PP04=logOH,
-                                PHANGS_Zprime=1e1**(logOH - 8.68),
-                                A17_Mstar=galaxy.m_star,
+                                A17_logOH_PP04=A17_logOH_PP04,
+                                PHANGS_Zprime=PHANGS_Zprime,
+                                A17_Mstar=A17_Mstar,
                                 A17_SFR=sfr,
-                                A17_redshift=0, **kwargs) / line_ratio
+                                A17_redshift=A17_redshift, **kwargs) / line_ratio
     return(alphaCO)
     
 # import phangs

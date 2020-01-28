@@ -38,6 +38,8 @@ def _parse_galtable(galobj, name):
             thisobj = hits[0]
         galobj.name = thisobj['NAME'].strip()
         galobj.vsys = thisobj['ORIENT_VLSR'] * u.km / u.s
+        galobj.velocity = galobj.vsys
+        galobj.vlsr = galobj.vsys
         galobj.center_position = SkyCoord(
             thisobj['ORIENT_RA'], thisobj['ORIENT_DEC'], frame='fk5',
             unit='degree')
@@ -196,7 +198,8 @@ class PhangsGalaxy(object):
 
         return self.center_position.to_pixel(wcs)
 
-    def rotation_curve(self, radius, return_bounds=False):
+    def rotation_curve(self, radius, return_bounds=False,
+                       extend=False):
         if type(radius) is not Quantity:
             warnings.warn('Radius must be specified with astropy.unit')
             return(None)
@@ -208,8 +211,20 @@ class PhangsGalaxy(object):
         if ~np.any(idx):
             warnings.warn('No rotation curve data found for ' + self.name)
             return(None)
-        
-        rsample = rctable[idx]['Radius']
+
+
+        dist_table_name = get_pkg_data_filename('data/RC_assumed_distance.txt',
+                                                package='phangs')
+        dist_table = Table.read(dist_table_name, format='ascii')
+        dist_idx = (dist_table['ID'] == self.name.lower())
+        if ~np.any(dist_idx):
+            warnings.warn('No distance foundf for ' + self.name)
+            warnings.warn('Not rescaling distances in rotation curve')
+            distance_factor = 1.0
+        else:
+            distance_factor = np.float(self.distance.to(u.Mpc).value
+                                       / dist_table[dist_idx]['Distance'].data[0])
+        rsample = rctable[idx]['Radius'] * distance_factor
         vsample = rctable[idx]['Vrot']
         vrot_lower = rctable[idx]['Vrot_lower']
         vrot_upper = rctable[idx]['Vrot_upper']
@@ -220,15 +235,38 @@ class PhangsGalaxy(object):
             r = (radius.to(u.rad) * self.distance.to(rsample.unit)).value
         else:
             warnings.warn("Radius units must be equivalent to angle or distance")
-        vinterp = np.interp(r, rsample.data, vsample.data, left=np.nan, right=np.nan)
+        if extend:
+            extendval = vsample.data[-1]
+        else:å
+            extendval = np.nan
+        vinterp = np.interp(r, np.r_[0, rsample.data], np.r_[0, vsample.data],
+                            left=np.nan, right=extendval)
         if return_bounds:
-            vr_lower = np.interp(r, rsample.data, vrot_lower.data,
-                                 left=np.nan, right=np.nan)
-            vr_upper = np.interp(r, rsample.data, vrot_upper.data,
-                                 left=np.nan, right=np.nan)
+            if extend:
+                extendval_lower = vrot_lower.data[-1]
+                extendval_upper = vrot_upper.data[-1]
+            else:
+                extendval_lower = np.nan
+                extendval_upper = np.nan
+            vr_lower = np.interp(r, np.r_[0, rsample.data],
+                                 np.r_[0, vrot_lower.data],
+                                 left=np.nan, right=extendval_lower)
+            vr_upper = np.interp(r, np.r_[0, rsample.data],
+                                 np.r_[0, vrot_upper.data],
+                                 left=np.nan, right=extendval_upper)
             return(vinterp * vsample.unit,
                    vr_lower * vsample.unit,
                    vr_upper * vsample.unit)
         else:
             return(vinterp * vsample.unit)
 
+
+    def los_velocity(self, skycoord=None, ra=None, dec=None,
+                    header=None, extend=False):
+            radius = self.radius(skycoord=skycoord, ra=ra, dec=dec, header=header)
+            x, y = self.radius(skycoord=skycoord, ra=ra, dec=dec, header=header,
+                            returnXY=True)
+            phi = np.arctan2(y, x)
+            vrot = self.rotation_curve(radius, extend=extend)
+            vlos = self.vsys + vrot * np.cos(phi) * np.sin(self.inclination)
+            return(vlos)
