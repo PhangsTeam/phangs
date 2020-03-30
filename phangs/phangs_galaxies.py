@@ -20,7 +20,7 @@ def _parse_galtable(galobj, name):
         # TODO: This isn't right
         table_name = fl[-1]
     else:
-        table_name = get_pkg_data_filename('data/phangs_sample_table_v1p4.fits',
+        table_name = get_pkg_data_filename('phangs_sample/export/phangs_sample_table.fits',
                                         package='phangs')
     galtable = Table.read(table_name)
     hits = [x for x in galtable if name.upper() in x['ALIAS']]
@@ -237,7 +237,7 @@ class PhangsGalaxy(object):
             warnings.warn("Radius units must be equivalent to angle or distance")
         if extend:
             extendval = vsample.data[-1]
-        else:å
+        else:
             extendval = np.nan
         vinterp = np.interp(r, np.r_[0, rsample.data], np.r_[0, vsample.data],
                             left=np.nan, right=extendval)
