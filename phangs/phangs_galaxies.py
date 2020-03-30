@@ -9,6 +9,8 @@ import numpy as np
 from astropy.utils.data import get_pkg_data_filename
 import os
 import glob
+import astropy.utils.introspection as intro
+
 
 __all__ = ['PhangsGalaxy']
 
@@ -20,53 +22,56 @@ def _parse_galtable(galobj, name):
         # TODO: This isn't right
         table_name = fl[-1]
     else:
-        table_name = get_pkg_data_filename('phangs_sample/export/phangs_sample_table.fits',
+        parent = os.path.dirname(intro.resolve_name('phangs').__file__)
+        table_name = get_pkg_data_filename('data/phangs_sample_table.fits',
                                         package='phangs')
     galtable = Table.read(table_name)
-    hits = [x for x in galtable if name.upper() in x['ALIAS']]
+    hits = [x for x in galtable if name.lower() in x['alias']]
+    # import pdb; pdb.set_trace()
     if len(hits) > 0:
         if len(hits) > 1:
             exact = np.zeros(len(hits), dtype=np.bool)
             for i, h in enumerate(hits):
                 exact[i] = np.any(
-                    [n.strip() == name for n in h['ALIAS'].split(';')])
+                    [n.strip() == name for n in h['alias'].split(';')])
             if np.sum(exact) == 1:
                 thisobj = hits[(np.where(exact))[0][0]]
             else:
                 raise Exception("More than one exact match in galbase")
         else:
             thisobj = hits[0]
-        galobj.name = thisobj['NAME'].strip()
-        galobj.vsys = thisobj['ORIENT_VLSR'] * u.km / u.s
+        galobj.name = thisobj['name'].strip()
+        galobj.vsys = thisobj['orient_vlsr'] * u.km / u.s
         galobj.velocity = galobj.vsys
         galobj.vlsr = galobj.vsys
         galobj.center_position = SkyCoord(
-            thisobj['ORIENT_RA'], thisobj['ORIENT_DEC'], frame='fk5',
+            thisobj['orient_ra'], thisobj['orient_dec'], frame='fk5',
             unit='degree')
-        galobj.distance = thisobj['DIST'] * u.Mpc
-        galobj.inclination = thisobj['ORIENT_INCL'] * u.deg
-        galobj.position_angle = thisobj['ORIENT_POSANG'] * u.deg
+        galobj.distance = thisobj['dist'] * u.Mpc
+        galobj.inclination = thisobj['orient_incl'] * u.deg
+        galobj.position_angle = thisobj['orient_posang'] * u.deg
         galobj.PA_is_kinematic = True
         galobj.provenance = 'PhangsTable'
-        galobj.has_alma = bool(thisobj['HAS_ALMA'])
-        galobj.has_astrosat = bool(thisobj['HAS_ASTROSAT'])
-        galobj.has_dense = bool(thisobj['HAS_DENSE'])
-        galobj.has_muse = bool(thisobj['HAS_MUSE'])
-        galobj.has_galex = bool(thisobj['HAS_GALEX'])
-        galobj.has_halpha = bool(thisobj['HAS_HALPHA'])
-        galobj.has_herschel = bool(thisobj['HAS_HERSCHEL'])
-        galobj.has_hi = bool(thisobj['HAS_HI'])
-        galobj.has_hst = bool(thisobj['HAS_HST'])
-        galobj.has_irac = bool(thisobj['HAS_IRAC'])
-        galobj.has_muse = bool(thisobj['HAS_MUSE'])
-        galobj.mw_av = thisobj['MWAV_SF11'] * u.mag
-        galobj.morph_T = thisobj['MORPH_T']
-        galobj.morph_bar = bool(thisobj['MORPH_BAR'])
-        galobj.m_star = 1e1 ** (thisobj['MSTAR_LOGMSTAR']) * u.M_sun
-        galobj.m_hi = 1e1 ** (thisobj['HI_LOGMHI']) * u.M_sun
-        galobj.m_h2 = 1e1 ** (thisobj['CO_LOGMH2']) * u.M_sun
-        galobj.sfr = 1e1 ** (thisobj['SFR_LOGSFR']) * u.Msun / u.yr
-        galobj.r25 = thisobj['SIZE_OPT_R25'] * u.arcsec
+        galobj.has_alma = bool(thisobj['survey_alma_status'])
+        galobj.has_astrosat = bool(thisobj['survey_astrosat_status'])
+        galobj.has_dense = bool(thisobj['survey_dense_status'])
+        galobj.has_muse = bool(thisobj['survey_muse_status'])
+        galobj.has_galex = bool(thisobj['survey_galex_status'])
+        galobj.has_halpha = bool(thisobj['survey_halpha_status'])
+        galobj.has_herschel = bool(thisobj['survey_herschel_status'])
+        galobj.has_hi = bool(thisobj['survey_hi_status'])
+        galobj.has_hst = bool(thisobj['survey_hst_status'])
+        galobj.has_irac = bool(thisobj['survey_irac_status'])
+        galobj.mw_av = thisobj['mwext_sf11'] * u.mag
+        galobj.morph_T = thisobj['morph_t']
+        galobj.morph_bar = bool(thisobj['morph_bar'])
+        galobj.morph = thisobj['morph_string']
+        galobj.m_star = 1e1 ** (thisobj['props_mstar']) * u.M_sun
+        galobj.m_hi = 1e1 ** (thisobj['props_mhi']) * u.M_sun
+        # galobj.m_h2 = 1e1 ** (thisobj['']) * u.M_sun
+        galobj.sfr = 1e1 ** (thisobj['props_sfr']) * u.Msun / u.yr
+        galobj.re = thisobj['size_reff'] * u.arcsec
+        galobj.r25 = thisobj['size_r25'] * u.arcsec
         galobj.table = thisobj
         return True
 
@@ -116,7 +121,7 @@ class PhangsGalaxy(object):
                     setattr(self, par, params[par])
         else:
             if not _parse_galtable(self, name):
-                warnings.r
+                
                 try:
                     from astroquery.ned import Ned
                     t = Ned.query_object(name)

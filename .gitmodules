@@ -1,6 +1,3 @@
 [submodule "phangs_sample"]
 	path = phangs_sample
 	url = git@github.com:PhangsTeam/phangs_sample.git
-[submodule "phangs/phangs_sample"]
-	path = phangs/phangs_sample
-	url = git@github.com:PhangsTeam/phangs_sample.git
