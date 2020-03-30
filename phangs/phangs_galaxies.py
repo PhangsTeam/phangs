@@ -41,17 +41,26 @@ def _parse_galtable(galobj, name):
         else:
             thisobj = hits[0]
         galobj.name = thisobj['name'].strip()
-        galobj.vsys = thisobj['orient_vlsr'] * u.km / u.s
-        galobj.velocity = galobj.vsys
-        galobj.vlsr = galobj.vsys
         galobj.center_position = SkyCoord(
             thisobj['orient_ra'], thisobj['orient_dec'], frame='fk5',
             unit='degree')
-        galobj.distance = thisobj['dist'] * u.Mpc
-        galobj.inclination = thisobj['orient_incl'] * u.deg
-        galobj.position_angle = thisobj['orient_posang'] * u.deg
-        galobj.PA_is_kinematic = True
+
+        propdict = {'vsys':'orient_vlsr',
+                    'distance':'dist',
+                    'inclination':'orient_incl',
+                    'position_angle':'orient_posang',
+                    'mw_av':'mwext_sf11',
+                    'm_star':'props_mstar',
+                    'm_hi':'props_mhi',
+                    'sfr':'props_sfr',
+                    'Re':'size_reff',
+                    'R25':'size_r25'}
+        for tag in propdict:
+            setattr(galobj, tag, (thisobj[propdict[tag]]
+                                  * galtable[propdict[tag]].unit)) 
+        
         galobj.provenance = 'PhangsTable'
+        galobj.morph = thisobj['morph_string']
         galobj.has_alma = bool(thisobj['survey_alma_status'])
         galobj.has_astrosat = bool(thisobj['survey_astrosat_status'])
         galobj.has_dense = bool(thisobj['survey_dense_status'])
@@ -62,16 +71,9 @@ def _parse_galtable(galobj, name):
         galobj.has_hi = bool(thisobj['survey_hi_status'])
         galobj.has_hst = bool(thisobj['survey_hst_status'])
         galobj.has_irac = bool(thisobj['survey_irac_status'])
-        galobj.mw_av = thisobj['mwext_sf11'] * u.mag
         galobj.morph_T = thisobj['morph_t']
         galobj.morph_bar = bool(thisobj['morph_bar'])
-        galobj.morph = thisobj['morph_string']
-        galobj.m_star = 1e1 ** (thisobj['props_mstar']) * u.M_sun
-        galobj.m_hi = 1e1 ** (thisobj['props_mhi']) * u.M_sun
-        # galobj.m_h2 = 1e1 ** (thisobj['']) * u.M_sun
-        galobj.sfr = 1e1 ** (thisobj['props_sfr']) * u.Msun / u.yr
-        galobj.re = thisobj['size_reff'] * u.arcsec
-        galobj.r25 = thisobj['size_r25'] * u.arcsec
+
         galobj.table = thisobj
         return True
 

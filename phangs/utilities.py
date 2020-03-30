@@ -30,3 +30,4 @@ def convolve_to_resolution(filename, name=None,
         resn_str = '_' + resolution.to_string().replace(' ','')
         name = filename.replace('.fits', resn_str+'.fits')
     data_out.write(name, overwrite=True)
+    
