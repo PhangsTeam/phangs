@@ -385,7 +385,7 @@ def alphaCO_from_coords(galaxy, skycoord=None, ra=None, dec=None,
                         header=None, logOH=None, prescription='Accurso+17',
                         line_ratio=0.65, A17_logOH_PP04=None, 
                         A17_redshift=None, A17_SFR=None, A17_Mstar=None,
-                        gradient='Sanchez+14',
+                        gradient='Sanchez+14', PHANGS_Zprime=None,
                          **kwargs):
 
     """
@@ -407,31 +407,29 @@ def alphaCO_from_coords(galaxy, skycoord=None, ra=None, dec=None,
     header : astropy.fits.Header
         FITS header specifying the map for the alpha_CO values to be returned
     line_ratio : float
-        Line ratio of the CO line relative to CO(1-0) used for rescaling.  Assumes 0.7.
+        Line ratio of the CO line relative to CO(1-0) used for rescaling.  Assumes 0.65.
     Extra keywords are passed to predict_alphaCO10() or predict_metallicity()
     """
     
     radius = galaxy.radius(skycoord=skycoord, ra=ra, dec=dec, header=header)
-    # TODO: CHANGE TO galaxy.sfr once populated in table
-    sfr = 1e1 ** (-1.12) * galaxy.m_star / (1e9 * u.M_sun) * u.M_sun / u.yr
+    sfr = galaxy.sfr
 
     if A17_SFR is None:
         A17_SFR = sfr
 
     if logOH is None:
-        # TODO: Update with proper Reff and SFR values in the new table
-        Reff = (galaxy.r25 / u.rad * galaxy.distance / 4).to(u.kpc)
+        Reff = (galaxy.Re / u.rad * galaxy.distance).to(u.kpc)
         logOH = predict_metallicity(galaxy.m_star, Rgal=radius, Re=Reff,
                                     gradient=gradient, **kwargs)
     if A17_logOH_PP04 is None:
-        A17_logOH_PP04 = log/OH
+        A17_logOH_PP04 = logOH
     if PHANGS_Zprime is None:
-        PHANGS_Zprime = 1e1**(logOH - 8.68)
+        PHANGS_Zprime = 1e1**(logOH - 8.69)
     if A17_Mstar is None:
         A17_Mstar = galaxy.m_star
     if A17_redshift is None:
         A17_redshift = 0
-    # TODO: find assumed value of Z_sun to make Zprime
+
     alphaCO = predict_alphaCO10(prescription=prescription, 
                                 A17_logOH_PP04=A17_logOH_PP04,
                                 PHANGS_Zprime=PHANGS_Zprime,
