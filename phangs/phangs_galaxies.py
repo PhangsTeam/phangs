@@ -23,7 +23,7 @@ def _parse_galtable(galobj, name):
         table_name = fl[-1]
     else:
         parent = os.path.dirname(intro.resolve_name('phangs').__file__)
-        table_name = get_pkg_data_filename('data/phangs_sample_table.fits',
+        table_name = get_pkg_data_filename('data/phangs_sample_table_v1p5.fits',
                                         package='phangs')
     galtable = Table.read(table_name)
     hits = [x for x in galtable if name.lower() in x['alias']]
