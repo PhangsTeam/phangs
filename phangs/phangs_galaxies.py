@@ -156,7 +156,8 @@ class PhangsGalaxy(object):
         else:
             raise ValueError("header or wcs must be given.")
         w = WCS(header)
-        ymat, xmat = np.indices((w.celestial._naxis2, w.celestial._naxis1))
+        naxis = w.pixel_shape
+        ymat, xmat = np.indices((naxis[1], naxis[0]))
         ramat, decmat = w.celestial.wcs_pix2world(xmat, ymat, 0)
         return SkyCoord(ramat, decmat, unit=(u.deg, u.deg))
 

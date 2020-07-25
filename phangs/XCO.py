@@ -386,6 +386,7 @@ def alphaCO_from_coords(galaxy, skycoord=None, ra=None, dec=None,
                         line_ratio=0.65, A17_logOH_PP04=None, 
                         A17_redshift=None, A17_SFR=None, A17_Mstar=None,
                         gradient='Sanchez+14', PHANGS_Zprime=None,
+                        B13_Zprime=None,
                          **kwargs):
 
     """
@@ -429,7 +430,6 @@ def alphaCO_from_coords(galaxy, skycoord=None, ra=None, dec=None,
         A17_Mstar = galaxy.m_star
     if A17_redshift is None:
         A17_redshift = 0
-
     alphaCO = predict_alphaCO10(prescription=prescription, 
                                 A17_logOH_PP04=A17_logOH_PP04,
                                 PHANGS_Zprime=PHANGS_Zprime,
