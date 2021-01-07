@@ -5,7 +5,7 @@ try:
     import paramiko
     have_ssh = True
 except ModuleNotFoundError:
-    warnings.warn("paramiko module not found.  SSH access to Archive diabled")
+    # warnings.warn("paramiko module not found.  SSH access to Archive diabled")
     have_ssh = False
         
 
