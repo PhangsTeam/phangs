@@ -32,7 +32,7 @@ if not _ASTROPY_SETUP_:   # noqa
     # Then you can be explicit to control what ends up in the namespace,
     # __all__ += ['do_primes']   # noqa
     # or you can keep everything from the subpackage with the following instead
-    __all__ += archive.__all__
+    # __all__ += archive.__all__
     __all__ += phangs_galaxies.__all__
     __all__ += utilities.__all__
     __all__ += XCO.__all__
