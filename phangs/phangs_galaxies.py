@@ -230,8 +230,8 @@ class PhangsGalaxy(object):
             warnings.warn('Not rescaling distances in rotation curve')
             distance_factor = 1.0
         else:
-            distance_factor = np.float(self.distance.to(u.Mpc).value
-                                       / dist_table[dist_idx]['Distance'].data[0])
+            distance_factor = float(self.distance.to(u.Mpc).value
+                                    / dist_table[dist_idx]['Distance'].data[0])
         rsample = rctable[idx]['Radius'] * distance_factor
         vsample = rctable[idx]['Vrot']
         vrot_lower = rctable[idx]['Vrot_lower']
@@ -276,5 +276,7 @@ class PhangsGalaxy(object):
                             returnXY=True)
             phi = np.arctan2(y, x)
             vrot = self.rotation_curve(radius, extend=extend)
+            if vrot is None:
+                return(None)
             vlos = self.vsys + vrot * np.cos(phi) * np.sin(self.inclination)
             return(vlos)
