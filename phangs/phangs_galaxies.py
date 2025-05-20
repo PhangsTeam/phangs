@@ -11,6 +11,12 @@ import os
 import glob
 import astropy.utils.introspection as intro
 
+# NGC 1808
+# dist 12.8 Mpc
+# logsfr 0.90
+# logmstar 10.3
+# posang -53.2
+# incl 49
 
 __all__ = ['PhangsGalaxy']
 
@@ -30,7 +36,7 @@ def _parse_galtable(galobj, name):
     # import pdb; pdb.set_trace()
     if len(hits) > 0:
         if len(hits) > 1:
-            exact = np.zeros(len(hits), dtype=np.bool)
+            exact = np.zeros(len(hits), dtype=bool)
             for i, h in enumerate(hits):
                 exact[i] = np.any(
                     [n.strip() == name for n in h['alias'].split(';')])
