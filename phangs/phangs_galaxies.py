@@ -195,6 +195,24 @@ class PhangsGalaxy(object):
         else:
             return Rgal.to(u.pc)
 
+    def XY_to_RADec(self, x=None, y=None):
+        '''
+        Convert x, y coordinates in disk of galaxy to RA, Dec coordinates.
+        '''
+        if x is None or y is None:
+            raise ValueError("x and y must be given.")
+        if self.center_position is None:
+            raise ValueError("center_position must be set.")
+        if self.distance is None:
+            raise ValueError("distance must be set.")
+
+        Rgal = np.sqrt(x**2 + (y * np.cos(self.inclination))**2)
+        GalPA = np.arctan2(y * np.cos(self.inclination), x)
+        GCDist = np.arctan(Rgal / self.distance)
+
+        return self.center_position.directional_offset_by(GalPA + self.position_angle, GCDist)
+        
+
     def position_angles(self, skycoord=None, ra=None, dec=None,
                         header=None):
         X, Y = self.radius(skycoord=skycoord, ra=ra, dec=dec,
